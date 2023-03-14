@@ -29,12 +29,10 @@ class DayMonthMaker(BaseEstimator, TransformerMixin):
         return X
 
 
-class OfficeCountRatios(BaseEstimator, TransformerMixin):
+class OfficeCount(BaseEstimator, TransformerMixin):
     '''
     입력받은 DateFrame에서 '사무실출근자수' column을 생성한다.
     '사무실출근자수'는 '본사정원수'에서 '본사휴가자수', '본사출장자수', '현본사소속재택근무자수'를 뺀 값이다.
-    '사무실출근자수'와 '중식계' 및 '석식계' column을 이용하여 '중식계비'와 '석식계비' column을 생성한다.
-    '중식계비' 및 '석식계비' column은 '사무실출근자수' 대비 '중/석식계'를 계산하여 산출한 백분율값이다.
     '''
     def fit(self, X, y=None):
         return self
@@ -42,6 +40,4 @@ class OfficeCountRatios(BaseEstimator, TransformerMixin):
     def transform(self, X, y=None):
         X = X.copy()
         X['사무실출근자수'] = X['본사정원수'] - (X['본사휴가자수'] + X['본사출장자수'] + X['현본사소속재택근무자수'])
-        X['중식계비'] = X['중식계']/X['사무실출근자수']*100
-        X['석식계비'] = X['석식계']/X['사무실출근자수']*100
         return X
