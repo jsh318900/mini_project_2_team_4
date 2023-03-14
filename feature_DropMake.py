@@ -1,3 +1,6 @@
+import pandas as pd
+from sklearn.base import BaseEstimator, TransformerMixin
+
 class MorningDropper(BaseEstimator, TransformerMixin):
     '''
     입력받은 DataFrame에서 '조식메뉴' columns을 drop하여 반환한다.
