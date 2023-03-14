@@ -30,15 +30,14 @@ def usefulmenu(lunchmenu, dinnermenu):
     menu1_list = []
 
     for menus in daymenu:   
-        for mark in marks:
-            menu1 = menus.replace('(', ' ')
-            menu1 = menu1.replace(')', ' ')
-            menu1 = menu1.replace(':', ' ')
-            menu1 = menu1.replace('*', ' ')
-            menu1 = menu1.replace('/', ' ')
-            menu1 = menu1.replace(',', ' ')
-            menu1 = menu1.replace('.', ' ')
-            menu1 = menu1.replace('&', ' ')
+        menu1 = menus.replace('(', ' ')
+        menu1 = menu1.replace(')', ' ')
+        menu1 = menu1.replace(':', ' ')
+        menu1 = menu1.replace('*', ' ')
+        menu1 = menu1.replace('/', ' ')
+        menu1 = menu1.replace(',', ' ')
+        menu1 = menu1.replace('.', ' ')
+        menu1 = menu1.replace('&', ' ')
         menu1 = re.split(r' ', menu1)
         menu1_list.extend(menu1)
         
@@ -57,4 +56,4 @@ def usefulmenu(lunchmenu, dinnermenu):
     menu_cnt = sorted(menu_cnt.items(), key = operator.itemgetter(1), 
                           reverse = True)
 
-    retrun menu_cnt
+    return menu_cnt
