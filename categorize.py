@@ -1,4 +1,7 @@
+import pandas as pd
+
 from sklearn.base import BaseEstimator, TransformerMixin
+from sklearn.preprocessing import MinMaxScaler
 
 """
 데이터 탐색단계에서 미리 도출한 재료들의 카테고리
@@ -19,7 +22,7 @@ CATEGORIES = {
 '가공식품1': '피클 단무지 맛살 어묵 비엔나 미트볼 순대'.split(' '),
 '가공식품2': '두부 곤약 묵 떡 김치'.split(' '),
 '곡물': '들깨 땅콩 수수 현미 흑미'.split(' '),
-'면류': '파스타 우동 국수 냉면 비빔면'.split(' ')
+'면류': '파스타 우동 국수 냉면 비빔면 소면'.split(' ')
 }
 
 class MenuCategorizer(BaseEstimator, TransformerMixin):
@@ -53,7 +56,7 @@ class MenuCategorizer(BaseEstimator, TransformerMixin):
 				categories = self.lunch_cat
 
 			for cat in categories:
-				X['중식_' + cat] = X['중식메뉴'].apply(lambda x : MenuCategorizer.count_hit(cat, x))
+				X['중식_' + cat] = X['중식메뉴'].apply(lambda x : count_hit(cat, x))
 
 		if self.include_dinner:
 			if self.dinner_cat is None:
@@ -62,32 +65,79 @@ class MenuCategorizer(BaseEstimator, TransformerMixin):
 				categories = self.dinner_cat
 
 			for cat in categories:
-				X['석식' + cat] = X['석식메뉴'].apply(lambda x : MenuCategorizer.count_hit(cat, x))
+				X['석식' + cat] = X['석식메뉴'].apply(lambda x : count_hit(cat, x))
 		return X
 
-	@staticmethod
-	def count_hit(category, menu_string):
-		if category not in CATEGORIES:
-			raise ValueError('unknown category:', category)
+class RatingCalculator(BaseEstimator, TransformerMixin):
 
-		cnt = 0
-		menus = ' '.join([x for x in MenuCategorizer.remove_origin(menu_string).split(' ') if len(x) > 0 and not (x.endswith('김치') or x.startswith('쌀'))])
-		for food_cat in CATEGORIES[category]:
-			if food_cat in menus:
-				 cnt += 1
-		return cnt
+	def __init__(self, meal_type):
+		if meal_type != '중식' and meal_type != '석식':
+			raise ValueError('Invalid meal type:', meal_type, '"중식" 또는 "석식"중 한가지로 입력해주세요.')
+		self.meal_type = meal_type
 
-	@staticmethod
-	def remove_origin(menu_string):
-		i = 0
-		while i < len(menu_string) and menu_string[i] != '(':
-			i += 1
+	def fit(self, X, y):
+		menus = X[self.meal_type + '메뉴']
+		ratings = y / X['사무실출근자수'].values.reshape(-1, 1)
 
-		j = i + 1
-		while j < len(menu_string) and menu_string[j] != ')':
-			j += 1
+		ratings = pd.DataFrame(MinMaxScaler().fit_transform(ratings), index=ratings.index, columns=ratings.columns)
+		ratings = ratings[self.meal_type + '계']
 
-		if i < j and i < len(menu_string) and j < len(menu_string):
-			return MenuCategorizer.remove_origin(menu_string[:i] + menu_string[j + 1:])
-		else:
-			return menu_string
+		appearance_counts_per_cat = {}
+		rating_sum_per_cat = {}
+
+		for row in X.index:
+			for cat in CATEGORIES:
+				cnt = 0
+				keywords = CATEGORIES[cat]
+				for key in keywords:
+					if key in menus[row]:
+						cnt = 1
+				if cnt > 0:
+					appearance_counts_per_cat[cat] = appearance_counts_per_cat.setdefault(cat, 0) + 1
+					rating_sum_per_cat[cat] = rating_sum_per_cat.setdefault(cat, 0) + ratings[row]
+
+		for k in rating_sum_per_cat:
+			rating_sum_per_cat[k] /= appearance_counts_per_cat[cat]
+
+		self.cat_ratings = rating_sum_per_cat
+		return self
+
+	def transform(self, X, y=None):
+		X = X.copy()
+		X[self.meal_type + '_선호도점수'] = X[self.meal_type + '메뉴'].apply(self._calculate_menu_rating)
+		return X
+
+	def _calculate_menu_rating(self, menu_string):
+		menu_string = remove_origin(menu_string)
+		total_hit_cnt = 0
+		rating_sum = 0
+		for cat in CATEGORIES:
+			hit_cnt = count_hit(cat, menu_string)
+			total_hit_cnt += hit_cnt
+			rating_sum += hit_cnt * self.cat_ratings[cat]
+		return rating_sum / total_hit_cnt
+
+def count_hit(category, menu_string):
+	if category not in CATEGORIES:
+		raise ValueError('unknown category:', category)
+
+	cnt = 0
+	menus = ' '.join([x for x in remove_origin(menu_string).split(' ') if len(x) > 0 and not (x.endswith('김치') or x.startswith('쌀'))])
+	for food_cat in CATEGORIES[category]:
+		if food_cat in menus:
+				cnt += 1
+	return cnt
+
+def remove_origin(menu_string):
+	i = 0
+	while i < len(menu_string) and menu_string[i] != '(':
+		i += 1
+
+	j = i + 1
+	while j < len(menu_string) and menu_string[j] != ')':
+		j += 1
+
+	if i < j and i < len(menu_string) and j < len(menu_string):
+		return remove_origin(menu_string[:i] + menu_string[j + 1:])
+	else:
+		return menu_string
