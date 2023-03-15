@@ -37,8 +37,6 @@ class MenuCategorizer(BaseEstimator, TransformerMixin):
 	                             None이면 가능한 모든 분류를 확인한다.
 	"""
 	def __init__(self, include_lunch=True, include_dinner=True, lunch_cat=None, dinner_cat=None):
-		if not include_lunch and not include_dinner:
-			raise ValueError('at least one of include_lunch and include_dinner must be True')
 		self.include_lunch = include_lunch
 		self.include_dinner = include_dinner
 		self.lunch_cat = lunch_cat
@@ -65,7 +63,7 @@ class MenuCategorizer(BaseEstimator, TransformerMixin):
 				categories = self.dinner_cat
 
 			for cat in categories:
-				X['석식' + cat] = X['석식메뉴'].apply(lambda x : count_hit(cat, x))
+				X['석식_' + cat] = X['석식메뉴'].apply(lambda x : count_hit(cat, x))
 		return X
 
 class RatingCalculator(BaseEstimator, TransformerMixin):
@@ -115,7 +113,10 @@ class RatingCalculator(BaseEstimator, TransformerMixin):
 			hit_cnt = count_hit(cat, menu_string)
 			total_hit_cnt += hit_cnt
 			rating_sum += hit_cnt * self.cat_ratings[cat]
-		return rating_sum / total_hit_cnt
+		if total_hit_cnt == 0:
+			return 0.0
+		else:
+			return rating_sum / total_hit_cnt
 
 def count_hit(category, menu_string):
 	if category not in CATEGORIES:
