@@ -142,3 +142,16 @@ def remove_origin(menu_string):
 		return remove_origin(menu_string[:i] + menu_string[j + 1:])
 	else:
 		return menu_string
+
+class ColumnChooser(BaseEstimator, TransformerMixin):
+    def __init__(self, columns):
+        self.columns = columns
+
+    def fit(self, X, y=None):
+        self.mapper = dict(zip(list(X.columns), [x.split('__')[1] for x in X.columns]))
+        return self
+
+    def transform(self, X, y=None):
+        X = X.copy()
+        X.rename(self.mapper, axis=1, inplace=True)
+        return X.reindex(columns=self.columns)
