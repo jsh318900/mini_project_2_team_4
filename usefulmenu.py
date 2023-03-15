@@ -57,3 +57,37 @@ def usefulmenu(lunchmenu, dinnermenu):
                           reverse = True)
 
     return menu_cnt
+
+from sklearn.base import BaseEstimator, TransformerMixin
+
+class SpicyViewer(BaseEstimator, TransformerMixin):
+    def __init__(self, meal_type1, meal_type2 = None):
+        if meal_type1 != '중식' and meal_type1 != '석식':
+            raise ValueError('Invalid meal type:', meal_type1, "'중식' 또는 '석식' 중 한가지로 입력해주세요")
+        elif meal_type2 != '중식' and meal_type2 != '석식':
+            raise ValueError('Invalid meal type:', meal_type2, "'중식' 또는 '석식' 중 한가지로 입력해주세요")
+        self.meal_type1 = meal_type1
+        self.meal_type2 = meal_type2
+    
+    def fit(self, X, y = None):
+        return self
+    
+    def transform(self, X):
+        #X는 전체 DataFrame
+        X = X.copy()
+        mae_oon_idx1 = X[self.meal_type1 + '메뉴'].str.contains('매운')
+        mae_com_idx1 = X[self.meal_type1 + '메뉴'].str.contains('매콤')
+        chili_idx1 = X[self.meal_type1 + '메뉴'].str.contains('고추')
+        jjam_bbong_idx1 = X[self.meal_type1 + '메뉴'].str.contains('짬뽕')
+        
+        X['매운' + self.meal_type1] =  mae_oon_idx1 + mae_com_idx1 + chili_idx1 + jjam_bbong_idx1
+        
+        mae_oon_idx2 = X[self.meal_type2 + '메뉴'].str.contains('매운')
+        mae_com_idx2 = X[self.meal_type2 + '메뉴'].str.contains('매콤')
+        chili_idx2 = X[self.meal_type2 + '메뉴'].str.contains('고추')
+        jjam_bbong_idx2 = X[self.meal_type2 + '메뉴'].str.contains('짬뽕')
+        
+        X['매운' + self.meal_type2] =  mae_oon_idx2 + mae_com_idx2 + chili_idx2 + jjam_bbong_idx2
+        
+        return X
+        
