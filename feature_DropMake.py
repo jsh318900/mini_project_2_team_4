@@ -11,6 +11,9 @@ class MorningDropper(BaseEstimator, TransformerMixin):
     def transform(self, X, y=None):
         return X.drop(['조식메뉴'], axis=1)
 
+    def set_output(self, transform):
+        return
+
     
 class DayMonthMaker(BaseEstimator, TransformerMixin):
     '''
@@ -28,6 +31,9 @@ class DayMonthMaker(BaseEstimator, TransformerMixin):
         X['월'] = X['일자'].apply(lambda X : X.month)
         return X
 
+    def set_output(self, transform):
+        return
+
 
 class OfficeCount(BaseEstimator, TransformerMixin):
     '''
@@ -42,44 +48,8 @@ class OfficeCount(BaseEstimator, TransformerMixin):
         X['사무실출근자수'] = X['본사정원수'] - (X['본사휴가자수'] + X['본사출장자수'] + X['현본사소속재택근무자수'])
         return X
 
-
-class MenuTextDropper(BaseEstimator, TransformerMixin):
-    '''
-    입력받은 DataFrame에서 '중식메뉴'와 '석식메뉴' columns을 drop하여 반환한다.
-    '''
-    def fit(self, X, y=None):
-        return self
-    
-    def transform(self, X, y=None):
-        X = X.copy()
-        X = X.drop(['중식메뉴'], axis=1)
-        X = X.drop(['석식메뉴'], axis=1)
-        return X
-
-class DateDropper(BaseEstimator, TransformerMixin):
-    '''
-    입력받은 DataFrame에서 '일자' columns을 drop하여 반환한다.
-    '''
-    def fit(self, X, y=None):
-        return self
-    
-    def transform(self, X, y=None):
-        X = X.copy()
-        X = X.drop(['일자'], axis=1)
-        return X
-    
-    
-class DoWDropper(BaseEstimator, TransformerMixin):
-    '''
-    입력받은 DataFrame에서 '요일' columns을 drop하여 반환한다.
-    '''
-    def fit(self, X, y=None):
-        return self
-    
-    def transform(self, X, y=None):
-        X = X.copy()
-        X = X.drop(['요일'], axis=1)
-        return X
+    def set_output(self, transform):
+        return
 
 
 class DayofWeekOHE(BaseEstimator, TransformerMixin):
@@ -88,5 +58,9 @@ class DayofWeekOHE(BaseEstimator, TransformerMixin):
     
     def transform(self, X, y=None):
         X = X.copy()
-        X = pd.concat([pd.get_dummies(X['요일']), X], axis=1)
+        X = pd.concat([pd.get_dummies(X['요일'], prefix='요일'), X], axis=1)
         return X
+
+    def set_output(self, transform):
+        return
+
