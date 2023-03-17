@@ -53,6 +53,10 @@ class OfficeCount(BaseEstimator, TransformerMixin):
 
 
 class DayofWeekOHE(BaseEstimator, TransformerMixin):
+    '''
+    입력받은 DataFrame에서 요일을 OneHotEndcoding이 적용된 칼럼 5개(월-금)를 생성한다.
+    요일칼럼은 삭제하지 않고 유지한다. (후 과정에서 Drop 필요)
+    '''
     def fit(self, X, y=None):
         return self
     
@@ -63,4 +67,3 @@ class DayofWeekOHE(BaseEstimator, TransformerMixin):
 
     def set_output(self, transform):
         return
-
