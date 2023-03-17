@@ -67,6 +67,11 @@ class MenuCategorizer(BaseEstimator, TransformerMixin):
 		return X
 
 class RatingCalculator(BaseEstimator, TransformerMixin):
+	"""
+	식단을 구성하는 메뉴들에대한 선호도가 중식계와 석식계에 반영되고, 각 메뉴들이 비슷한 영향을 끼칠거라고 가정하고
+	식수계 / 사무실출근자수를 선호도를 측정하는 척도로 생각해서 각 재료분류별로 점수를 메겨주는 변환기.
+	중식_선호도, 석식_선호도 컬럼을 추가한다.
+	"""
 
 	def __init__(self, meal_type):
 		if meal_type != '중식' and meal_type != '석식':
@@ -74,6 +79,12 @@ class RatingCalculator(BaseEstimator, TransformerMixin):
 		self.meal_type = meal_type
 
 	def fit(self, X, y):
+		"""
+		주어지는 훈련 특성데이터와 훈련 라벨값을 이용해서 선호도점수 계산
+		각 식단별로 재료그룹이 나온 횟수를 구하고, 하나이상 나온 그룹들에 그 날의 식수계 / 사무실출근자수 점수를 더해준다.
+		그렇게 총 점수값을 구하고, 각 재료그룹이 나왔던만큼 나누어서 그 재료그룹의 선호도점수를 결정한다.
+		주의: 테스트세트로는 fit을 부르면 안됨.
+		"""
 		menus = X[self.meal_type + '메뉴']
 		ratings = y / X['사무실출근자수'].values.reshape(-1, 1)
 
